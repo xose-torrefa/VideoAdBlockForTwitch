@@ -1,0 +1,102 @@
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+html, body {
+  width: 320px;
+  background-color: #fff;
+}
+.p1 {
+  font-family: Arial, Helvetica, sans-serif;
+  color: black;
+  text-align: center;
+  padding-top: 0px;
+  padding-right: 30px;
+  padding-bottom: 0px;
+  padding-left: 30px;
+}
+.p2 {
+  font-family: Arial, Helvetica, sans-serif;
+  color: black;
+  text-align: left;
+  padding-top: 5px;
+  padding-right: 30px;
+  padding-bottom: 5px;
+  padding-left: 30px;
+}
+.switch {
+  float: right;
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 5px;
+  bottom: 3px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+input:checked + .slider {
+  background-color: #772aa0;
+}
+input:focus + .slider {
+  box-shadow: 0 0 1px #772aa0;
+}
+input:checked + .slider:before {
+  -webkit-transform: translateX(18px);
+  -ms-transform: translateX(18px);
+  transform: translateX(18px);
+}
+.slider.round {
+  border-radius: 40px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+</style>
+</head>
+<body>
+<div id="popup-content">
+<img src=logo.png>
+<p class="p1">If you would like to thank me and contribute to this extension:</p>
+<p class="p1"><a href="https://paypal.me/ttvadblock" target="_blank"><img src=paypal-donate-button.jpg></a></p>
+<p class="p2">Turn ad-blocker on/off <label class="switch">
+  <input type="checkbox" name="checkbox1" checked>
+  <span class="slider round"></span>
+</label></p>
+<p class="p2">Try for 1080p ad-free stream <label class="switch">
+  <input type="checkbox" name="checkbox2" checked>
+  <span class="slider round"></span>
+</label></p>
+<p class="p2">Turn off "Blocking ads.." <label class="switch">
+  <input type="checkbox" name="checkbox3">
+  <span class="slider round"></span>
+</label></p>
+<p class="p2">When changing a setting, you may need to refresh the Twitch tab.</p>
+</div>
+<script src="popupjs.js"></script>
+</body>
+</html>
