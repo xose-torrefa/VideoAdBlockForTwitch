@@ -37,6 +37,41 @@ function updateSettings() {
 }
 
 function removeVideoAds() {
+
+    //This stops Twitch from pausing the player when in another tab and an ad shows.
+    Object.defineProperty(document, 'visibilityState', {
+        get() {
+            return 'visible';
+        }
+    });
+    Object.defineProperty(document, 'hidden', {
+        get() {
+            return false;
+        }
+    });
+    const block = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+    };
+    document.addEventListener('visibilitychange', block, true);
+    document.addEventListener('webkitvisibilitychange', block, true);
+    document.addEventListener('mozvisibilitychange', block, true);
+    document.addEventListener('hasFocus', block, true);
+    if (/Firefox/.test(navigator.userAgent)) {
+        Object.defineProperty(document, 'mozHidden', {
+            get() {
+                return false;
+            }
+        });
+    } else {
+        Object.defineProperty(document, 'webkitHidden', {
+            get() {
+                return false;
+            }
+        });
+    }
+
     //Send settings updates to worker.
     window.addEventListener("message", (event) => {
         if (event.source != window)
@@ -209,9 +244,10 @@ function removeVideoAds() {
             //Reduces ad frequency.
             try {
                 var doAdCompleteRequests = tryNotifyAdsWatchedM3U8(textStr);
-            } catch (err) {}
+            } catch (err) {};
 
             //Saves doing multiple GQL requests if we already have the ad-free weaver 480p url.
+            try {
             if (FullQuality == false && AdFreeWeaverURLPlayer2) {
                 var savedStreamM3u8Response = await realFetch(AdFreeWeaverURLPlayer2);
                 if (savedStreamM3u8Response.status == 200) {
@@ -230,6 +266,7 @@ function removeVideoAds() {
                     AdFreeWeaverURLPlayer2 = null;
                 }
             }
+            } catch (err) {};
 
             var accessTokenResponse = await getAccessToken(CurrentChannelNameFromM3U8, playerType);
 
@@ -237,6 +274,7 @@ function removeVideoAds() {
 
                 var accessToken = await accessTokenResponse.json();
 
+                try {
                 var urlInfo = new URL('https://usher.ttvnw.net/api/channel/hls/' + CurrentChannelNameFromM3U8 + '.m3u8' + RootM3U8Params);
                 urlInfo.searchParams.set('sig', accessToken.data.streamPlaybackAccessToken.signature);
                 urlInfo.searchParams.set('token', accessToken.data.streamPlaybackAccessToken.value);
@@ -277,6 +315,8 @@ function removeVideoAds() {
                 } else {
                     return textStr;
                 }
+                } catch (err) {};
+                return textStr;
             } else {
                 return textStr;
             }

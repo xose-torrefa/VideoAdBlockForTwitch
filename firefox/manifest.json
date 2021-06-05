@@ -2,7 +2,7 @@
   "description": "Swaps video ads for an ad-free stream between 1080p and 480p.",
   "manifest_version": 2,
   "name": "Video Ad-Block, for Twitch",
-  "version": "2.5",
+  "version": "3.0",
 
   "icons": {
     "48": "icons/ttv-48.png",
@@ -32,8 +32,8 @@
 
   "browser_specific_settings": {
     "gecko": {
-    "id": "addon@VideoAdBlockForTwitch.com",
-    "strict_min_version": "48.0"
+    "id": "{3385c2d8-dcfd-4f92-adb7-5d8429dee164}",
+    "strict_min_version": "57.0"
     }
   },
 
