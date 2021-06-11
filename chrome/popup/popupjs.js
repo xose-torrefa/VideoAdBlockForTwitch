@@ -54,19 +54,6 @@ function saveOptions() {
             blockingMessageTTV: "false"
         }, function() {});
     }
-
-    chrome.tabs.query({
-        active: true,
-        currentWindow: true
-    }, function(tabs) {
-        for (let tab of tabs) {
-            if (tab.title.includes('Twitch')) {
-                chrome.tabs.sendMessage(tab.id, {
-                    greeting: "Settings are changing."
-                }, function(response) {});
-            }
-        }
-    });
 }
 
 function restoreOptions() {
