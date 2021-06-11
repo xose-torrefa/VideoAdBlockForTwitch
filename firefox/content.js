@@ -1,11 +1,3 @@
-//To listen for extension setting changes.
-browser.runtime.onMessage.addListener(request => {
-    updateSettings();
-    return Promise.resolve({
-        response: "Settings Changed"
-    });
-});
-
 function updateSettings() {
     var onOff = browser.storage.sync.get('onOffTTV');
     onOff.then((res) => {
@@ -107,6 +99,7 @@ function removeVideoAds() {
         scope.PlayerType2 = 'thunderdome'; //480p
         scope.PlayerType3 = 'pop_tart'; //480p
         scope.PlayerType4 = 'picture-by-picture'; //360p
+        scope.AdFreeWeaverURLPlayer1 = null;
         scope.AdFreeWeaverURLPlayer2 = null;
         scope.CurrentChannelNameFromM3U8 = null;
         scope.RootM3U8Params = null;
@@ -246,26 +239,43 @@ function removeVideoAds() {
                 var doAdCompleteRequests = tryNotifyAdsWatchedM3U8(textStr);
             } catch (err) {};
 
-            //Saves doing multiple GQL requests if we already have the ad-free weaver 480p url.
+            //Saves doing multiple GQL requests if we already have the ad-free weaver url.
             try {
-            if (FullQuality == false && AdFreeWeaverURLPlayer2) {
-                var savedStreamM3u8Response = await realFetch(AdFreeWeaverURLPlayer2);
-                if (savedStreamM3u8Response.status == 200) {
-                    var savedm3u8Text = await savedStreamM3u8Response.text();
-                    if (!savedm3u8Text.includes(AdSignifier)) {
-                        if (BlockingMessage == true) {
-                            postMessage({	
-                                key: 'HideAdBlockBanner'	
-                            });
+                if (FullQuality == false && AdFreeWeaverURLPlayer2) {
+                    var savedStreamM3u8Response = await realFetch(AdFreeWeaverURLPlayer2);
+                    if (savedStreamM3u8Response.status == 200) {
+                        var savedm3u8Text = await savedStreamM3u8Response.text();
+                        if (!savedm3u8Text.includes(AdSignifier)) {
+                            if (BlockingMessage == true) {
+                                postMessage({
+                                    key: 'HideAdBlockBanner'
+                                });
+                            }
+                            return savedm3u8Text;
+                        } else {
+                            AdFreeWeaverURLPlayer2 = null;
                         }
-                        return savedm3u8Text;
                     } else {
                         AdFreeWeaverURLPlayer2 = null;
                     }
-                } else {
-                    AdFreeWeaverURLPlayer2 = null;
+                } else if (AdFreeWeaverURLPlayer1) {
+                    var savedStreamM3u8Response = await realFetch(AdFreeWeaverURLPlayer1);
+                    if (savedStreamM3u8Response.status == 200) {
+                        var savedm3u8Text = await savedStreamM3u8Response.text();
+                        if (!savedm3u8Text.includes(AdSignifier)) {
+                            if (BlockingMessage == true) {
+                                postMessage({
+                                    key: 'HideAdBlockBanner'
+                                });
+                            }
+                            return savedm3u8Text;
+                        } else {
+                            AdFreeWeaverURLPlayer1 = null;
+                        }
+                    } else {
+                        AdFreeWeaverURLPlayer1 = null;
+                    }
                 }
-            }
             } catch (err) {};
 
             var accessTokenResponse = await getAccessToken(CurrentChannelNameFromM3U8, playerType);
@@ -275,46 +285,49 @@ function removeVideoAds() {
                 var accessToken = await accessTokenResponse.json();
 
                 try {
-                var urlInfo = new URL('https://usher.ttvnw.net/api/channel/hls/' + CurrentChannelNameFromM3U8 + '.m3u8' + RootM3U8Params);
-                urlInfo.searchParams.set('sig', accessToken.data.streamPlaybackAccessToken.signature);
-                urlInfo.searchParams.set('token', accessToken.data.streamPlaybackAccessToken.value);
-                var encodingsM3u8Response = await realFetch(urlInfo.href);
-                if (encodingsM3u8Response.status === 200) {
+                    var urlInfo = new URL('https://usher.ttvnw.net/api/channel/hls/' + CurrentChannelNameFromM3U8 + '.m3u8' + RootM3U8Params);
+                    urlInfo.searchParams.set('sig', accessToken.data.streamPlaybackAccessToken.signature);
+                    urlInfo.searchParams.set('token', accessToken.data.streamPlaybackAccessToken.value);
+                    var encodingsM3u8Response = await realFetch(urlInfo.href);
+                    if (encodingsM3u8Response.status === 200) {
 
-                    var encodingsM3u8 = await encodingsM3u8Response.text();
-                    var streamM3u8Url = encodingsM3u8.match(/^https:.*\.m3u8$/m)[0];
+                        var encodingsM3u8 = await encodingsM3u8Response.text();
+                        var streamM3u8Url = encodingsM3u8.match(/^https:.*\.m3u8$/m)[0];
 
-                    var streamM3u8Response = await realFetch(streamM3u8Url);
-                    if (streamM3u8Response.status == 200) {
-                        var m3u8Text = await streamM3u8Response.text();
-                        if (!m3u8Text.includes(AdSignifier)) {
-                            if (playerType == PlayerType2) {
-                                AdFreeWeaverURLPlayer2 = streamM3u8Url;
+                        var streamM3u8Response = await realFetch(streamM3u8Url);
+                        if (streamM3u8Response.status == 200) {
+                            var m3u8Text = await streamM3u8Response.text();
+                            if (!m3u8Text.includes(AdSignifier)) {
+                                if (playerType == PlayerType2) {
+                                    AdFreeWeaverURLPlayer2 = streamM3u8Url;
+                                }
+                                if (playerType == PlayerType1) {
+                                    AdFreeWeaverURLPlayer1 = streamM3u8Url;
+                                }
                             }
-                        }
-                        WasShowingAd = true;
-                        if (BlockingMessage == false) {
-                            if (Math.floor(Math.random() * 4) == 3) {
+                            WasShowingAd = true;
+                            if (BlockingMessage == false) {
+                                if (Math.floor(Math.random() * 4) == 3) {
+                                    postMessage({
+                                        key: 'ShowDonateBanner'
+                                    });
+                                } else {
+                                    postMessage({
+                                        key: 'ShowAdBlockBanner'
+                                    });
+                                }
+                            } else if (BlockingMessage == true) {
                                 postMessage({
-                                    key: 'ShowDonateBanner'
-                                });
-                            } else {
-                                postMessage({
-                                    key: 'ShowAdBlockBanner'
+                                    key: 'HideAdBlockBanner'
                                 });
                             }
-                        } else if (BlockingMessage == true) {	
-                            postMessage({	
-                                key: 'HideAdBlockBanner'	
-                            });
+                            return m3u8Text;
+                        } else {
+                            return textStr;
                         }
-                        return m3u8Text;
                     } else {
                         return textStr;
                     }
-                } else {
-                    return textStr;
-                }
                 } catch (err) {};
                 return textStr;
             } else {
@@ -323,6 +336,7 @@ function removeVideoAds() {
         } else {
             if (WasShowingAd) {
                 AdFreeWeaverURLPlayer2 = null;
+                AdFreeWeaverURLPlayer1 = null;
                 WasShowingAd = false;
                 postMessage({
                     key: 'PauseResumePlayer'
@@ -445,6 +459,7 @@ function removeVideoAds() {
                     var channelName = (new URL(url)).pathname.match(/([^\/]+)(?=\.\w+$)/)[0];
                     RootM3U8Params = (new URL(url)).search;
                     AdFreeWeaverURLPlayer2 = null;
+                    AdFreeWeaverURLPlayer1 = null;
                     CurrentChannelNameFromM3U8 = channelName;
                     //To prevent pause/resume loop for mid-rolls.
                     var isPBYPRequest = url.includes('picture-by-picture');

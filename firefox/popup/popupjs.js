@@ -54,28 +54,6 @@ function saveOptions() {
             blockingMessageTTV: "false"
         });
     }
-    var sendMessage = browser.tabs.query({
-        currentWindow: true,
-        active: true
-    }).then(sendMessageToTabs).catch(onError);
-}
-
-function sendMessageToTabs(tabs) {
-    for (let tab of tabs) {
-        if (tab.title.includes('Twitch')) {
-            browser.tabs.sendMessage(
-                tab.id, {
-                    greeting: "Settings are changing."
-                }
-            ).then(response => {
-                console.log(response.response);
-            }).catch(onError);
-        }
-    }
-}
-
-function onError(error) {
-    console.error(`Error: ${error}`);
 }
 
 function restoreOptions() {

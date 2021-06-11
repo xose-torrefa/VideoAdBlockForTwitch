@@ -2,7 +2,7 @@
   "description": "Swaps video ads for an ad-free stream between 1080p and 480p.",
   "manifest_version": 2,
   "name": "Video Ad-Block, for Twitch",
-  "version": "3.0",
+  "version": "4.0",
 
   "icons": {
     "48": "icons/ttv-48.png",
@@ -24,7 +24,6 @@
   "permissions": [
     "webRequest",
     "webRequestBlocking",
-    "tabs",
     "storage",
     "https://*.twitch.tv/*",
     "https://*.amazon-adsystem.com/*","https://cdn.krxd.net/*","https://script.ioam.de/iam.js","https://edge.quantserve.com/quant.js","https://ddacn6pr5v0tl.cloudfront.net/custom-moat-video-native.min.js","https://d2v02itv0y9u9t.cloudfront.net/dist/1.0.5/v6s.js","https://*.imrworldwide.com/*","https://countess.twitch.tv/*","https://*.scorecardresearch.com/*","https://www.googletagservices.com/tag/js/gpt.js","*://*.branch.io/*","*://comscore.com/*"
