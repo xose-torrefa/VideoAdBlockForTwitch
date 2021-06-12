@@ -379,16 +379,16 @@ function removeVideoAds() {
             const baseData = {
                 stitched: true,
                 roll_type: rollType,
-                player_mute: false,
-                player_volume: 0.5,
-                visible: true,
+                player_mute: true,
+                player_volume: 0.0,
+                visible: false,
             };
             for (let podPosition = 0; podPosition < podLength; podPosition++) {
                 const extendedData = {
                     ...baseData,
                     ad_id: adId,
                     ad_position: podPosition,
-                    duration: 30,
+                    duration: 0,
                     creative_id: creativeId,
                     total_ads: podLength,
                     order_id: orderId,
