@@ -100,6 +100,7 @@ function removeVideoAds() {
         scope.RootM3U8Params = null;
         scope.WasShowingAd = false;
         scope.GQLDeviceID = null;
+        scope.GQLRandomDeviceID = null;
         scope.OnOff = true;
         scope.FullQuality = true;
         scope.BlockingMessage = false;
@@ -138,6 +139,9 @@ function removeVideoAds() {
                     if (e.data.key == 'UpdateDeviceId') {
                         GQLDeviceID = e.data.value;
                     }
+                    if (e.data.key == 'UpdateRandomDeviceId') {
+                        GQLRandomDeviceID = e.data.value;
+                    }
                     if (e.data.key == 'onOff') {
                        if (e.data.value == "true") {
                        OnOff = true;
@@ -162,7 +166,7 @@ function removeVideoAds() {
                 });
                 hookWorkerFetch();
                 importScripts('${jsURL}');
-            `
+            `;
             super(URL.createObjectURL(new Blob([newBlobStr])));
             twitchMainWorker = this;
             this.onmessage = function(e) {
@@ -186,7 +190,7 @@ function removeVideoAds() {
                     adBlockDiv.P.textContent = 'Help support us...';
                     adBlockDiv.style.display = 'block';
                 }
-            }
+            };
 
             function getAdBlockDiv() {
                 //To display a notification to the user, that an ad is being blocked.
@@ -206,7 +210,7 @@ function removeVideoAds() {
                 return adBlockDiv;
             }
         }
-    }
+    };
 
     function getWasmWorkerUrl(twitchBlobUrl) {
         var req = new XMLHttpRequest();
@@ -232,10 +236,10 @@ function removeVideoAds() {
 
             //Reduces ad frequency.
             try {
-                var doAdCompleteRequests = tryNotifyAdsWatchedM3U8(textStr);
-            } catch (err) {};
+                tryNotifyAdsWatchedM3U8(textStr);
+            } catch (err) {}
 
-            //Saves doing multiple GQL requests if we already have the ad-free weaver 480p url.
+            //Saves doing multiple GQL requests if we already have the ad-free weaver url.
             try {
                 if (FullQuality == false && AdFreeWeaverURLPlayer2) {
                     var savedStreamM3u8Response = await realFetch(AdFreeWeaverURLPlayer2);
@@ -272,7 +276,7 @@ function removeVideoAds() {
                         AdFreeWeaverURLPlayer1 = null;
                     }
                 }
-            } catch (err) {};
+            } catch (err) {}
 
             var accessTokenResponse = await getAccessToken(CurrentChannelNameFromM3U8, playerType);
 
@@ -324,7 +328,8 @@ function removeVideoAds() {
                     } else {
                         return textStr;
                     }
-                } catch (err) {};
+                } catch (err) {}
+                return textStr;
             } else {
                 return textStr;
             }
@@ -354,7 +359,7 @@ function removeVideoAds() {
                 const key = x.substring(0, idx);
                 const value = x.substring(idx + 1);
                 const num = Number(value);
-                return [key, Number.isNaN(num) ? value.startsWith('"') ? JSON.parse(value) : value : num]
+                return [key, Number.isNaN(num) ? value.startsWith('"') ? JSON.parse(value) : value : num];
             }));
     }
 
@@ -401,7 +406,6 @@ function removeVideoAds() {
                 await gqlRequest(adRecordgqlPacket('video_ad_pod_complete', radToken, baseData));
             }
         }
-        return true;
     }
 
     function hookWorkerFetch() {
@@ -464,7 +468,7 @@ function removeVideoAds() {
                 }
             }
             return realFetch.apply(this, arguments);
-        }
+        };
     }
 
     function getAccessToken(channelName, playerType, realFetch) {
@@ -486,11 +490,14 @@ function removeVideoAds() {
 
     function gqlRequest(body, realFetch) {
         var fetchFunc = realFetch ? realFetch : fetch;
-        if (!GQLDeviceID) {
+        if (!GQLRandomDeviceID && GQLDeviceID) {
+            GQLRandomDeviceID = GQLDeviceID;
+        }
+        if (!GQLRandomDeviceID && !GQLDeviceID) {
             var dcharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
             var dcharactersLength = dcharacters.length;
             for (var i = 0; i < 32; i++) {
-                GQLDeviceID += dcharacters.charAt(Math.floor(Math.random() * dcharactersLength));
+                GQLRandomDeviceID += dcharacters.charAt(Math.floor(Math.random() * dcharactersLength));
             }
         }
         return fetchFunc('https://gql.twitch.tv/gql', {
@@ -498,7 +505,7 @@ function removeVideoAds() {
             body: JSON.stringify(body),
             headers: {
                 'client-id': ClientID,
-                'X-Device-Id': GQLDeviceID
+                'X-Device-Id': GQLRandomDeviceID
             }
         });
     }
@@ -524,45 +531,99 @@ function removeVideoAds() {
 
     function reloadTwitchPlayer(isPausePlay) {
         //This will do an instant pause/play to return to original quality once the ad is finished.
-        function findReactNode(root, constraint) {
-            if (root.stateNode && constraint(root.stateNode)) {
-                return root.stateNode;
+        try {
+            var videoController = document.querySelector('.video-player__overlay');
+            if (videoController) {
+                videoController.style.visibility = "hidden";
             }
-            let node = root.child;
-            while (node) {
-                const result = findReactNode(node, constraint);
-                if (result) {
-                    return result;
+
+            function findReactNode(root, constraint) {
+                if (root.stateNode && constraint(root.stateNode)) {
+                    return root.stateNode;
                 }
-                node = node.sibling;
+                let node = root.child;
+                while (node) {
+                    const result = findReactNode(node, constraint);
+                    if (result) {
+                        return result;
+                    }
+                    node = node.sibling;
+                }
+                return null;
             }
-            return null;
+            var reactRootNode = null;
+            var rootNode = document.querySelector('#root');
+            if (rootNode && rootNode._reactRootContainer && rootNode._reactRootContainer._internalRoot && rootNode._reactRootContainer._internalRoot.current) {
+                reactRootNode = rootNode._reactRootContainer._internalRoot.current;
+            }
+            if (!reactRootNode) {
+                if (videoController) {
+                    videoController.style.visibility = "visible";
+                }
+                return;
+            }
+            var player = findReactNode(reactRootNode, node => node.setPlayerActive && node.props && node.props.mediaPlayerInstance);
+            player = player && player.props && player.props.mediaPlayerInstance ? player.props.mediaPlayerInstance : null;
+            var playerState = findReactNode(reactRootNode, node => node.setSrc && node.setInitialPlaybackSettings);
+            if (!player) {
+                if (videoController) {
+                    videoController.style.visibility = "visible";
+                }
+                return;
+            }
+            if (!playerState) {
+                if (videoController) {
+                    videoController.style.visibility = "visible";
+                }
+                return;
+            }
+            if (player.paused) {
+                if (videoController) {
+                    videoController.style.visibility = "visible";
+                }
+                return;
+            }
+            if (isPausePlay) {
+                player.pause();
+                player.play();
+                setTimeout(function() {
+                    if (videoController) {
+                        videoController.style.visibility = "visible";
+                    }
+                }, 6500);
+                return;
+            }
+        } catch (err) {
+            var videoController = document.querySelector('.video-player__overlay');
+            if (videoController) {
+                videoController.style.visibility = "visible";
+            }
         }
-        var reactRootNode = null;
-        var rootNode = document.querySelector('#root');
-        if (rootNode && rootNode._reactRootContainer && rootNode._reactRootContainer._internalRoot && rootNode._reactRootContainer._internalRoot.current) {
-            reactRootNode = rootNode._reactRootContainer._internalRoot.current;
-        }
-        if (!reactRootNode) {
-            return;
-        }
-        var player = findReactNode(reactRootNode, node => node.setPlayerActive && node.props && node.props.mediaPlayerInstance);
-        player = player && player.props && player.props.mediaPlayerInstance ? player.props.mediaPlayerInstance : null;
-        var playerState = findReactNode(reactRootNode, node => node.setSrc && node.setInitialPlaybackSettings);
-        if (!player) {
-            return;
-        }
-        if (!playerState) {
-            return;
-        }
-        if (player.paused) {
-            return;
-        }
-        if (isPausePlay) {
-            player.pause();
-            player.play();
-            return;
-        }
+    }
+
+    function generateRandomGQLDeviceID() {
+        var randomGQLDeviceID = 'eVI6jx47kJvCFfFowK86eVI6jx47kJvC';
+        try {
+            var alphaNum = 'abcdefghijklmnopqrstuvwxyz123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567';
+
+            var currentDate = new Date();
+            var currentDateStart = new Date(currentDate.getFullYear(), 0, 0);
+            var dateDifference = (currentDate - currentDateStart) + ((currentDateStart.getTimezoneOffset() - currentDate.getTimezoneOffset()) * 60 * 1000);
+            var oneDay = 1000 * 60 * 60 * 24;
+
+            var currentDayNumber = Math.floor(dateDifference / oneDay);
+
+            var letterNumLocation = currentDayNumber / 6;
+            letterNumLocation = letterNumLocation.toFixed(0);
+            var letterNumToChangeTo = alphaNum.charAt(letterNumLocation);
+            letterNumLocation = letterNumLocation / 2;
+            letterNumLocation = letterNumLocation.toFixed(0);
+
+            randomGQLDeviceID = randomGQLDeviceID.split('');
+            randomGQLDeviceID[letterNumLocation] = letterNumToChangeTo;
+            randomGQLDeviceID = randomGQLDeviceID.join('');
+        } catch (err) {}
+        return randomGQLDeviceID;
     }
 
     function hookFetch() {
@@ -570,7 +631,7 @@ function removeVideoAds() {
         window.fetch = function(url, init, ...args) {
             if (typeof url === 'string') {
                 if (url.includes('/access_token') || url.includes('gql')) {
-                    //Device ID is used when notifying ads as watched, to slow ad frequency.
+                    //Device ID is used when notifying ads as watched, to slow ad frequency, only if random device ID fails.
                     var deviceId = init.headers['X-Device-Id'];
                     if (typeof deviceId !== 'string') {
                         deviceId = init.headers['Device-ID'];
@@ -584,6 +645,22 @@ function removeVideoAds() {
                             value: GQLDeviceID
                         });
                     }
+                    //Use shared random device ID to kick in the rate limit.
+                    if (url.includes('gql') && init && typeof init.body === 'string' && init.body.includes('PlaybackAccessToken') && init.body.includes('"isLive":true')) {
+                        init.headers = new Headers(init.headers);
+                        if (!GQLRandomDeviceID) {
+                            var randomDeviceID = generateRandomGQLDeviceID();
+                            twitchMainWorker.postMessage({
+                                key: 'UpdateRandomDeviceId',
+                                value: randomDeviceID
+                            });
+                            init.headers.set('Device-ID', randomDeviceID);
+                            init.headers.set('X-Device-Id', randomDeviceID);
+                        } else {
+                            init.headers.set('Device-ID', GQLRandomDeviceID);
+                            init.headers.set('X-Device-Id', GQLRandomDeviceID);
+                        }
+                    }
                     //To prevent pause/resume loop for mid-rolls.
                     if (url.includes('gql') && init && typeof init.body === 'string' && init.body.includes('PlaybackAccessToken') && init.body.includes('picture-by-picture')) {
                         init.body = '';
@@ -595,10 +672,9 @@ function removeVideoAds() {
                 }
             }
             return realFetch.apply(this, arguments);
-        }
+        };
     }
 
-    window.reloadTwitchPlayer = reloadTwitchPlayer;
     hookFetch();
 }
 var script = document.createElement('script');
