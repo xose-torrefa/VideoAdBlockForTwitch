@@ -100,7 +100,6 @@ function removeVideoAds() {
         scope.RootM3U8Params = null;
         scope.WasShowingAd = false;
         scope.GQLDeviceID = null;
-        scope.GQLRandomDeviceID = null;
         scope.OnOff = true;
         scope.FullQuality = true;
         scope.BlockingMessage = false;
@@ -138,9 +137,6 @@ function removeVideoAds() {
                 self.addEventListener('message', function(e) {
                     if (e.data.key == 'UpdateDeviceId') {
                         GQLDeviceID = e.data.value;
-                    }
-                    if (e.data.key == 'UpdateRandomDeviceId') {
-                        GQLRandomDeviceID = e.data.value;
                     }
                     if (e.data.key == 'onOff') {
                        if (e.data.value == "true") {
@@ -490,14 +486,11 @@ function removeVideoAds() {
 
     function gqlRequest(body, realFetch) {
         var fetchFunc = realFetch ? realFetch : fetch;
-        if (!GQLRandomDeviceID && GQLDeviceID) {
-            GQLRandomDeviceID = GQLDeviceID;
-        }
-        if (!GQLRandomDeviceID && !GQLDeviceID) {
+        if (!GQLDeviceID) {
             var dcharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
             var dcharactersLength = dcharacters.length;
             for (var i = 0; i < 32; i++) {
-                GQLRandomDeviceID += dcharacters.charAt(Math.floor(Math.random() * dcharactersLength));
+                GQLDeviceID += dcharacters.charAt(Math.floor(Math.random() * dcharactersLength));
             }
         }
         return fetchFunc('https://gql.twitch.tv/gql', {
@@ -505,7 +498,7 @@ function removeVideoAds() {
             body: JSON.stringify(body),
             headers: {
                 'client-id': ClientID,
-                'X-Device-Id': GQLRandomDeviceID
+                'X-Device-Id': GQLDeviceID
             }
         });
     }
@@ -644,22 +637,6 @@ function removeVideoAds() {
                             key: 'UpdateDeviceId',
                             value: GQLDeviceID
                         });
-                    }
-                    //Use shared random device ID to kick in the rate limit.
-                    if (url.includes('gql') && init && typeof init.body === 'string' && init.body.includes('PlaybackAccessToken') && init.body.includes('"isLive":true')) {
-                        init.headers = new Headers(init.headers);
-                        if (!GQLRandomDeviceID) {
-                            var randomDeviceID = generateRandomGQLDeviceID();
-                            twitchMainWorker.postMessage({
-                                key: 'UpdateRandomDeviceId',
-                                value: randomDeviceID
-                            });
-                            init.headers.set('Device-ID', randomDeviceID);
-                            init.headers.set('X-Device-Id', randomDeviceID);
-                        } else {
-                            init.headers.set('Device-ID', GQLRandomDeviceID);
-                            init.headers.set('X-Device-Id', GQLRandomDeviceID);
-                        }
                     }
                     //To prevent pause/resume loop for mid-rolls.
                     if (url.includes('gql') && init && typeof init.body === 'string' && init.body.includes('PlaybackAccessToken') && init.body.includes('picture-by-picture')) {
