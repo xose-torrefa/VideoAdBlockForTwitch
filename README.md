@@ -26,6 +26,9 @@ Some people are worried by the permissions requested by the extension. We ask fo
 
 Changelog:
 
+4.3:</br>
+Roll-back random device ID due to bugs for some users on Chrome.</br>
+
 4.2:</br>
 Made transition more seamless.</br>
 Testing stronger ad rate limiting using random device ID.
