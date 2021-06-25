@@ -3,16 +3,6 @@
 var onOff = document.querySelector("input[name=checkbox1]");
 var fullQuality = document.querySelector("input[name=checkbox2]");
 var blockingMessage = document.querySelector("input[name=checkbox3]");
-var share = document.getElementById("share");
-
-share.onclick = function() {
-    var input = document.body.appendChild(document.createElement("input"));
-    input.value = "https://addons.mozilla.org/en-US/firefox/addon/video-ad-block-for-twitch/";
-    input.focus();
-    input.select();
-    document.execCommand('copy');
-    input.parentNode.removeChild(input);
-};
 
 onOff.addEventListener('change', function() {
     saveOptions();

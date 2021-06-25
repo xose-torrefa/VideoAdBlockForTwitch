@@ -3,16 +3,6 @@
 var onOff = document.querySelector("input[name=checkbox1]");
 var fullQuality = document.querySelector("input[name=checkbox2]");
 var blockingMessage = document.querySelector("input[name=checkbox3]");
-var share = document.getElementById("share");
-
-share.onclick = function() {
-    var input = document.body.appendChild(document.createElement("input"));
-    input.value = "https://chrome.google.com/webstore/detail/video-ad-block-for-twitch/kgeglempfkhalebjlogemlmeakondflc";
-    input.focus();
-    input.select();
-    document.execCommand('copy');
-    input.parentNode.removeChild(input);
-};
 
 onOff.addEventListener('change', function() {
     saveOptions();
