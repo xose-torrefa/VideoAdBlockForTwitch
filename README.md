@@ -6,6 +6,8 @@ This is all done locally, so no VPN's, Proxies or third party websites.
 
 You must remove any Twitch related user-scripts or other Twitch specific ad block extensions to prevent conflicts. You can use this extension with other major ad blockers though.
 
+This extension is not compatible with AdGuard (AdGuard Extra Extension). If you have this installed you will get a loading loop. It must be disabled as their script will block this script. Use UBlock Origin instead.
+
 Chrome: https://chrome.google.com/webstore/detail/video-ad-block-for-twitch/kgeglempfkhalebjlogemlmeakondflc
 
 Firefox: https://addons.mozilla.org/en-US/firefox/addon/video-ad-block-for-twitch/
