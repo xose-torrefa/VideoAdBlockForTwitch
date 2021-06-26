@@ -1,6 +1,7 @@
 //Get extension settings.
 //Check if Firefox or not.
 const isFirefox = !chrome.app;
+
 function updateSettings() {
     if (isFirefox) {
         var fullQuality = browser.storage.sync.get('fullQualityTTV');
@@ -43,38 +44,40 @@ function updateSettings() {
 
 function removeVideoAds() {
     //This stops Twitch from pausing the player when in another tab and an ad shows.
-    Object.defineProperty(document, 'visibilityState', {
-        get() {
-            return 'visible';
-        }
-    });
-    Object.defineProperty(document, 'hidden', {
-        get() {
-            return false;
-        }
-    });
-    const block = e => {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-    };
-    document.addEventListener('visibilitychange', block, true);
-    document.addEventListener('webkitvisibilitychange', block, true);
-    document.addEventListener('mozvisibilitychange', block, true);
-    document.addEventListener('hasFocus', block, true);
-    if (/Firefox/.test(navigator.userAgent)) {
-        Object.defineProperty(document, 'mozHidden', {
+    try {
+        Object.defineProperty(document, 'visibilityState', {
+            get() {
+                return 'visible';
+            }
+        });
+        Object.defineProperty(document, 'hidden', {
             get() {
                 return false;
             }
         });
-    } else {
-        Object.defineProperty(document, 'webkitHidden', {
-            get() {
-                return false;
-            }
-        });
-    }
+        const block = e => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+        };
+        document.addEventListener('visibilitychange', block, true);
+        document.addEventListener('webkitvisibilitychange', block, true);
+        document.addEventListener('mozvisibilitychange', block, true);
+        document.addEventListener('hasFocus', block, true);
+        if (/Firefox/.test(navigator.userAgent)) {
+            Object.defineProperty(document, 'mozHidden', {
+                get() {
+                    return false;
+                }
+            });
+        } else {
+            Object.defineProperty(document, 'webkitHidden', {
+                get() {
+                    return false;
+                }
+            });
+        }
+    } catch (err) {}
 
     //Send settings updates to worker.
     window.addEventListener("message", (event) => {
@@ -606,22 +609,31 @@ if (isFirefox) {
     });
 } else {
     chrome.storage.local.get(['onOffTTV'], function(result) {
-                if (result && result.onOffTTV) {
-                    if (result.onOffTTV == "true") {
-                        var script = document.createElement('script');
-                        script.appendChild(document.createTextNode('(' + removeVideoAds + ')();'));
-                        (document.body || document.head || document.documentElement).appendChild(script);
-                        setTimeout(function() {
-                            updateSettings();
-                        }, 4000);
-                    }
-                } else {
-                    var script = document.createElement('script');
-                    script.appendChild(document.createTextNode('(' + removeVideoAds + ')();'));
-                    (document.body || document.head || document.documentElement).appendChild(script);
-                    setTimeout(function() {
-                        updateSettings();
-                    }, 4000);
-                }
-            });
+        if (chrome.runtime.lastError) {
+            var script = document.createElement('script');
+            script.appendChild(document.createTextNode('(' + removeVideoAds + ')();'));
+            (document.body || document.head || document.documentElement).appendChild(script);
+            setTimeout(function() {
+                updateSettings();
+            }, 4000);
+            return;
+        }
+        if (result && result.onOffTTV) {
+            if (result.onOffTTV == "true") {
+                var script = document.createElement('script');
+                script.appendChild(document.createTextNode('(' + removeVideoAds + ')();'));
+                (document.body || document.head || document.documentElement).appendChild(script);
+                setTimeout(function() {
+                    updateSettings();
+                }, 4000);
+            }
+        } else {
+            var script = document.createElement('script');
+            script.appendChild(document.createTextNode('(' + removeVideoAds + ')();'));
+            (document.body || document.head || document.documentElement).appendChild(script);
+            setTimeout(function() {
+                updateSettings();
+            }, 4000);
+        }
+    });
 }
