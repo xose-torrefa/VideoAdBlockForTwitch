@@ -30,6 +30,9 @@ Some people are worried by the permissions requested by the extension. We ask fo
 
 Changelog:
 
+4.6:</br>
+Extension will now auto show options on first install/update.</br>
+
 4.5:</br>
 Caught Chrome runtime error.</br>
 Fixed a bug with tab visibility listeners.</br>
@@ -38,6 +41,4 @@ Fixed a bug with tab visibility listeners.</br>
 Unified content.js code for both extensions.</br>
 Extension settings now apply correctly after tab refresh.</br>
 
-4.3:</br>
-Roll-back random device ID due to bugs for some users on Chrome.</br>
 
