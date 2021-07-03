@@ -6,7 +6,7 @@ This is all done locally, so no VPN's, Proxies or third party websites.
 
 You must remove any Twitch related user-scripts or other Twitch specific ad block extensions to prevent conflicts. You can use this extension with uBlock Origin though (Without user-scripts installed).
 
-This extension is not compatible with AdGuard (AdGuard Extra Extension). If you have this installed you will get a loading loop. It must be disabled.
+If you have issues while using this extension, please note, some ad-blocker extensions may interfere with this extension, you can whitelist the Twitch domain to avoid this.
 
 </br>
 
