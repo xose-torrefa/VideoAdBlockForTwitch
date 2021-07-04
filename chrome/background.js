@@ -1,5 +1,6 @@
+//Show options page on first install.
 function handleInstalled(details) {
-    if (details.reason == 'install' || details.reason == 'update') {
+    if (details.reason == 'install') {
         chrome.runtime.openOptionsPage();
     }
 }
