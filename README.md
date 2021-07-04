@@ -30,6 +30,9 @@ Some people are worried by the permissions requested by the extension. We ask fo
 
 Changelog:
 
+4.7:</br>
+Extension will now auto show options on first install only.</br>
+
 4.6:</br>
 Extension will now auto show options on first install/update.</br>
 
