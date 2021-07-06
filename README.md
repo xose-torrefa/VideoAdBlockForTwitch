@@ -31,7 +31,7 @@ Some people are worried by the permissions requested by the extension. We ask fo
 Changelog:
 
 4.8:</br>
-Remove auto showing of options on install. (Users think it's an ad).</br>
+Remove auto showing of options on install/update. (Users think it's a spammy ad due to the way focus is taken on Chrome).</br>
 
 4.6:</br>
 Extension will now auto show options on first install/update.</br>
