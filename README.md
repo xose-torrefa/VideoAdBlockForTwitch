@@ -30,6 +30,9 @@ Some people are worried by the permissions requested by the extension. We ask fo
 
 Changelog:
 
+4.9:</br>
+Cleaned up formatting and added a better UI for first install information. UI will only show on first install.</br>
+
 4.8:</br>
 Remove auto showing of options on install/update. (Users think it's a spammy ad due to the way focus is taken on Chrome).</br>
 
@@ -39,9 +42,5 @@ Extension will now auto show options on first install/update.</br>
 4.5:</br>
 Caught Chrome runtime error.</br>
 Fixed a bug with tab visibility listeners.</br>
-
-4.4:</br>
-Unified content.js code for both extensions.</br>
-Extension settings now apply correctly after tab refresh.</br>
 
 
