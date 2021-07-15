@@ -1,9 +1,8 @@
 //Show options and install message on first install only.
-//Keep window focused as false.
 function handleInstalled(details) {
     if (details.reason == 'install') {
         let createData = {
-            focused: false,
+            focused: true,
             type: "popup",
             url: "popup/install.html",
             width: 365,

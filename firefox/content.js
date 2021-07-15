@@ -13,11 +13,11 @@ function updateSettings() {
                 }, "*");
             }
         });
-        var blockingMessage = browser.storage.sync.get('blockingMessageTTV');
-        blockingMessage.then((res) => {
+        var hideBlockingMessage = browser.storage.sync.get('blockingMessageTTV');
+        hideBlockingMessage.then((res) => {
             if (res.blockingMessageTTV == "true" || res.blockingMessageTTV == "false") {
                 window.postMessage({
-                    type: "blockingMessage",
+                    type: "hideBlockingMessage",
                     value: res.blockingMessageTTV
                 }, "*");
             }
@@ -34,7 +34,7 @@ function updateSettings() {
         chrome.storage.local.get(['blockingMessageTTV'], function(result) {
             if (result.blockingMessageTTV == "true" || result.blockingMessageTTV == "false") {
                 window.postMessage({
-                    type: "blockingMessage",
+                    type: "hideBlockingMessage",
                     value: result.blockingMessageTTV
                 }, "*");
             }
@@ -90,10 +90,10 @@ function removeVideoAds() {
                     value: event.data.value
                 });
             }
-        } else if (event.data.type && (event.data.type == "blockingMessage")) {
+        } else if (event.data.type && (event.data.type == "hideBlockingMessage")) {
             if (twitchMainWorker) {
                 twitchMainWorker.postMessage({
-                    key: 'blockingMessage',
+                    key: 'hideBlockingMessage',
                     value: event.data.value
                 });
             }
@@ -112,7 +112,7 @@ function removeVideoAds() {
         scope.WasShowingAd = false;
         scope.GQLDeviceID = null;
         scope.FullQuality = true;
-        scope.BlockingMessage = false;
+        scope.HideBlockingMessage = false;
     }
 
     declareOptions(window);
@@ -141,7 +141,7 @@ function removeVideoAds() {
                 ${getAccessToken.toString()}
                 ${gqlRequest.toString()}
                 ${adRecordgqlPacket.toString()}
-                ${tryNotifyAdsWatchedM3U8.toString()}
+                ${tryNotifyTwitch.toString()}
                 ${parseAttributes.toString()}
                 declareOptions(self);
                 self.addEventListener('message', function(e) {
@@ -155,11 +155,11 @@ function removeVideoAds() {
                         FullQuality = false;
                         }
                     }
-                    if (e.data.key == 'blockingMessage') {
+                    if (e.data.key == 'hideBlockingMessage') {
                         if (e.data.value == "true") {
-                        BlockingMessage = true;
+                        HideBlockingMessage = true;
                         } else if (e.data.value == "false") {
-                        BlockingMessage = false;
+                        HideBlockingMessage = false;
                         }
                     }
                 });
@@ -291,7 +291,7 @@ function removeVideoAds() {
 
             //Reduces ad frequency.
             try {
-                tryNotifyAdsWatchedM3U8(textStr);
+                tryNotifyTwitch(textStr);
             } catch (err) {}
 
             var accessTokenResponse = await getAccessToken(CurrentChannelNameFromM3U8, playerType);
@@ -314,7 +314,7 @@ function removeVideoAds() {
                         if (streamM3u8Response.status == 200) {
                             var m3u8Text = await streamM3u8Response.text();
                             WasShowingAd = true;
-                            if (BlockingMessage == false) {
+                            if (HideBlockingMessage == false) {
                                 if (Math.floor(Math.random() * 4) == 3) {
                                     postMessage({
                                         key: 'ShowDonateBanner'
@@ -324,7 +324,7 @@ function removeVideoAds() {
                                         key: 'ShowAdBlockBanner'
                                     });
                                 }
-                            } else if (BlockingMessage == true) {
+                            } else if (HideBlockingMessage == true) {
                                 postMessage({
                                     key: 'HideAdBlockBanner'
                                 });
@@ -369,20 +369,19 @@ function removeVideoAds() {
             }));
     }
 
-    async function tryNotifyAdsWatchedM3U8(streamM3u8) {
+    async function tryNotifyTwitch(streamM3u8) {
         //We notify that an ad was requested but was not visible and was also muted.
-        //We only need 'video_ad_pod_complete' for this.
         var matches = streamM3u8.match(/#EXT-X-DATERANGE:(ID="stitched-ad-[^\n]+)\n/);
         if (matches.length > 1) {
             const attrString = matches[1];
             const attr = parseAttributes(attrString);
             var podLength = parseInt(attr['X-TV-TWITCH-AD-POD-LENGTH'] ? attr['X-TV-TWITCH-AD-POD-LENGTH'] : '1');
-            //var podPosition = parseInt(attr['X-TV-TWITCH-AD-POD-POSITION'] ? attr['X-TV-TWITCH-AD-POD-POSITION'] : '0');
+            var podPosition = parseInt(attr['X-TV-TWITCH-AD-POD-POSITION'] ? attr['X-TV-TWITCH-AD-POD-POSITION'] : '0');
             var radToken = attr['X-TV-TWITCH-AD-RADS-TOKEN'];
-            //var lineItemId = attr['X-TV-TWITCH-AD-LINE-ITEM-ID'];
-            //var orderId = attr['X-TV-TWITCH-AD-ORDER-ID'];
-            //var creativeId = attr['X-TV-TWITCH-AD-CREATIVE-ID'];
-            //var adId = attr['X-TV-TWITCH-AD-ADVERTISER-ID'];
+            var lineItemId = attr['X-TV-TWITCH-AD-LINE-ITEM-ID'];
+            var orderId = attr['X-TV-TWITCH-AD-ORDER-ID'];
+            var creativeId = attr['X-TV-TWITCH-AD-CREATIVE-ID'];
+            var adId = attr['X-TV-TWITCH-AD-ADVERTISER-ID'];
             var rollType = attr['X-TV-TWITCH-AD-ROLL-TYPE'].toLowerCase();
             const baseData = {
                 stitched: true,
@@ -392,25 +391,25 @@ function removeVideoAds() {
                 visible: false,
             };
             for (let podPosition = 0; podPosition < podLength; podPosition++) {
-                //const extendedData = {
-                //    ...baseData,
-                //    ad_id: adId,
-                //    ad_position: podPosition,
-                //    duration: 0,
-                //   creative_id: creativeId,
-                //    total_ads: podLength,
-                //    order_id: orderId,
-                //    line_item_id: lineItemId,
-                //};
-                //await gqlRequest(adRecordgqlPacket('video_ad_impression', radToken, extendedData));
-                //for (let quartile = 0; quartile < 4; quartile++) {
-                //    await gqlRequest(
-                //        adRecordgqlPacket('video_ad_quartile_complete', radToken, {
-                //            ...extendedData,
-                //            quartile: quartile + 1,
-                //        })
-                //    );
-                //}
+                const extendedData = {
+                    ...baseData,
+                    ad_id: adId,
+                    ad_position: podPosition,
+                    duration: 0,
+                    creative_id: creativeId,
+                    total_ads: podLength,
+                    order_id: orderId,
+                    line_item_id: lineItemId,
+                };
+                await gqlRequest(adRecordgqlPacket('video_ad_impression', radToken, extendedData));
+                for (let quartile = 0; quartile < 4; quartile++) {
+                    await gqlRequest(
+                        adRecordgqlPacket('video_ad_quartile_complete', radToken, {
+                            ...extendedData,
+                            quartile: quartile + 1,
+                        })
+                    );
+                }
                 await gqlRequest(adRecordgqlPacket('video_ad_pod_complete', radToken, baseData));
             }
         }
@@ -550,7 +549,7 @@ function removeVideoAds() {
         window.fetch = function(url, init, ...args) {
             if (typeof url === 'string') {
                 if (url.includes('/access_token') || url.includes('gql')) {
-                    //Device ID is used when notifying ads as watched, to slow ad frequency.
+                    //Device ID is used when notifying Twitch of ads.
                     var deviceId = init.headers['X-Device-Id'];
                     if (typeof deviceId !== 'string') {
                         deviceId = init.headers['Device-ID'];
@@ -579,61 +578,41 @@ function removeVideoAds() {
     }
     hookFetch();
 }
+
+function appendBlockingScript() {
+    var script = document.createElement('script');
+    script.appendChild(document.createTextNode('(' + removeVideoAds + ')();'));
+    (document.body || document.head || document.documentElement).appendChild(script);
+    setTimeout(function() {
+        updateSettings();
+    }, 4000);
+}
+
 if (isFirefox) {
     var onOff = browser.storage.sync.get('onOffTTV');
     onOff.then((res) => {
         if (res && res.onOffTTV) {
             if (res.onOffTTV == "true") {
-                var script = document.createElement('script');
-                script.appendChild(document.createTextNode('(' + removeVideoAds + ')();'));
-                (document.body || document.head || document.documentElement).appendChild(script);
-                setTimeout(function() {
-                    updateSettings();
-                }, 4000);
+                appendBlockingScript();
             }
         } else {
-            var script = document.createElement('script');
-            script.appendChild(document.createTextNode('(' + removeVideoAds + ')();'));
-            (document.body || document.head || document.documentElement).appendChild(script);
-            setTimeout(function() {
-                updateSettings();
-            }, 4000);
+            appendBlockingScript();
         }
     }, err => {
-        var script = document.createElement('script');
-        script.appendChild(document.createTextNode('(' + removeVideoAds + ')();'));
-        (document.body || document.head || document.documentElement).appendChild(script);
-        setTimeout(function() {
-            updateSettings();
-        }, 4000);
+        appendBlockingScript();
     });
 } else {
     chrome.storage.local.get(['onOffTTV'], function(result) {
         if (chrome.runtime.lastError) {
-            var script = document.createElement('script');
-            script.appendChild(document.createTextNode('(' + removeVideoAds + ')();'));
-            (document.body || document.head || document.documentElement).appendChild(script);
-            setTimeout(function() {
-                updateSettings();
-            }, 4000);
+            appendBlockingScript();
             return;
         }
         if (result && result.onOffTTV) {
             if (result.onOffTTV == "true") {
-                var script = document.createElement('script');
-                script.appendChild(document.createTextNode('(' + removeVideoAds + ')();'));
-                (document.body || document.head || document.documentElement).appendChild(script);
-                setTimeout(function() {
-                    updateSettings();
-                }, 4000);
+                appendBlockingScript();
             }
         } else {
-            var script = document.createElement('script');
-            script.appendChild(document.createTextNode('(' + removeVideoAds + ')();'));
-            (document.body || document.head || document.documentElement).appendChild(script);
-            setTimeout(function() {
-                updateSettings();
-            }, 4000);
+            appendBlockingScript();
         }
     });
 }
