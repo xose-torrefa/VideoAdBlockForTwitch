@@ -30,6 +30,9 @@ Some people are worried by the permissions requested by the extension. We ask fo
 
 Changelog:
 
+4.9.1:</br>
+Fixed rate-limit issue and cleaned up code.</br>
+
 4.9:</br>
 Cleaned up formatting and added a better UI for first install information. UI will only show on first install.</br>
 
@@ -38,9 +41,5 @@ Remove auto showing of options on install/update. (Users think it's a spammy ad 
 
 4.6:</br>
 Extension will now auto show options on first install/update.</br>
-
-4.5:</br>
-Caught Chrome runtime error.</br>
-Fixed a bug with tab visibility listeners.</br>
 
 
