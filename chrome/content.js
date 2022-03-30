@@ -182,12 +182,6 @@ function removeVideoAds() {
                     adBlockDiv.style.display = 'none';
                 } else if (e.data.key == 'PauseResumePlayer') {
                     reloadTwitchPlayer(true);
-                } else if (e.data.key == 'ShowDonateBanner') {
-                    if (adBlockDiv == null) {
-                        adBlockDiv = getAdBlockDiv();
-                    }
-                    adBlockDiv.P.textContent = 'Help support us...';
-                    adBlockDiv.style.display = 'block';
                 }
             };
 
@@ -200,7 +194,7 @@ function removeVideoAds() {
                     if (adBlockDiv == null) {
                         adBlockDiv = document.createElement('div');
                         adBlockDiv.className = 'adblock-overlay';
-                        adBlockDiv.innerHTML = '<a href="https://paypal.me/ttvadblock" target="_blank"><div class="player-adblock-notice" style="color: white; background-color: rgba(0, 0, 0, 0.8); position: absolute; top: 0px; left: 0px; padding: 5px;"><p></p></div></a>';
+                        adBlockDiv.innerHTML = '<a href="https://paypal.me/ttvadblock" target="_blank"><div class="player-adblock-notice" style="color: #ffffff; background-color: rgba(0,0,0,0.8); position: absolute; top: 0px; left: 0px; padding: 5px;"><p></p></div></a>';
                         adBlockDiv.style.display = 'none';
                         adBlockDiv.P = adBlockDiv.querySelector('p');
                         playerRootDiv.appendChild(adBlockDiv);
@@ -315,15 +309,9 @@ function removeVideoAds() {
                             var m3u8Text = await streamM3u8Response.text();
                             WasShowingAd = true;
                             if (HideBlockingMessage == false) {
-                                if (Math.floor(Math.random() * 4) == 3) {
-                                    postMessage({
-                                        key: 'ShowDonateBanner'
-                                    });
-                                } else {
                                     postMessage({
                                         key: 'ShowAdBlockBanner'
                                     });
-                                }
                             } else if (HideBlockingMessage == true) {
                                 postMessage({
                                     key: 'HideAdBlockBanner'
